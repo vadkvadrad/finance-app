@@ -56,9 +56,9 @@ func (service *AuthService) Register(email, password, name string) (string, erro
 	// Находим пользователя и проверяем его наличие
 	existedUser, _ := service.UserRepository.FindByKey(user.EmailKey, email)
 
-	if existedUser != nil && existedUser.IsVerified {
+	if existedUser != nil && existedUser.IsVerified { // если пользователь существует и верифицирован
 		return "", errors.New(er.ErrUserExists)
-	} else if existedUser != nil {
+	} else if existedUser != nil { // если пользователь существует и НЕ верифицирован
 		// Регенерация кода и id сессии
 		existedUser.Generate()
 
@@ -92,11 +92,11 @@ func (service *AuthService) Register(email, password, name string) (string, erro
 
 	// Создаем запись account
 	_, err = service.AccountRepository.Create(&account.Account{
-		UserID: user.ID,
-		Balance: 0,
+		UserID:   user.ID,
+		Balance:  0,
 		Currency: account.CurrencyRub,
 	})
-		if err != nil {
+	if err != nil {
 		return "", err
 	}
 
@@ -127,7 +127,6 @@ func (service *AuthService) Verify(sessionId, code string) (*user.User, error) {
 
 	return user, nil
 }
-
 
 func (service *AuthService) sendEmail(email, code string) {
 	// Отправка кода на почту
