@@ -55,8 +55,17 @@ func (service *AuthService) Login(email, password string) (*user.User, error) {
 func (service *AuthService) Register(email, password, name string) (string, error) {
 	// Находим пользователя и проверяем его наличие
 	existedUser, _ := service.UserRepository.FindByKey(user.EmailKey, email)
-	if existedUser != nil {
+
+	if existedUser != nil && existedUser.IsVerified {
 		return "", errors.New(er.ErrUserExists)
+	} else if existedUser != nil {
+		// Регенерация кода и id сессии
+		existedUser.Generate()
+
+		// Отправить сообщение с кодом
+		service.sendEmail(email, existedUser.Code)
+
+		return existedUser.SessionId, nil
 	}
 
 	// Генерим хеш пароля
@@ -91,15 +100,8 @@ func (service *AuthService) Register(email, password, name string) (string, erro
 		return "", err
 	}
 
-	// Отправка кода на почту
-	go service.Event.Publish(event.Event{
-		Type: event.EventSendEmail,
-		Data: sender.Addressee{
-			To:      email,
-			Subject: "Подтвердите почту",
-			Text:    "Ваш персональный код подтверждения личности: " + user.Code + ". Не сообщайте никому данный код.",
-		},
-	})
+	// Отправить сообщение с кодом
+	service.sendEmail(email, user.Code)
 
 	return user.SessionId, nil
 }
@@ -124,4 +126,17 @@ func (service *AuthService) Verify(sessionId, code string) (*user.User, error) {
 	}
 
 	return user, nil
+}
+
+
+func (service *AuthService) sendEmail(email, code string) {
+	// Отправка кода на почту
+	go service.Event.Publish(event.Event{
+		Type: event.EventSendEmail,
+		Data: sender.Addressee{
+			To:      email,
+			Subject: "Подтвердите почту",
+			Text:    "Ваш персональный код подтверждения личности: " + code + ". Не сообщайте никому данный код.",
+		},
+	})
 }
