@@ -2,8 +2,15 @@ package user
 
 import (
 	"finance-app/pkg/db"
+	"fmt"
 
 	"gorm.io/gorm/clause"
+)
+
+const (
+	EmailKey     = "email"
+	PhoneKey     = "phone"
+	SessionIdKey = "session_id"
 )
 
 type UserRepository struct {
@@ -32,9 +39,10 @@ func (repo *UserRepository) Update(user *User) (*User, error) {
 	return user, nil
 }
 
-func (repo *UserRepository) FindByEmail(email string) (*User, error) {
+func (repo *UserRepository) FindByKey(key, data string) (*User, error) {
 	var user User
-	result := repo.Db.First(&user, "email = ?", email)
+	query := fmt.Sprintf("%s = ?", key)
+	result := repo.Db.First(&user, query, data)
 	if result.Error != nil {
 		return nil, result.Error
 	}

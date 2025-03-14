@@ -26,6 +26,7 @@ func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 
 	router.HandleFunc("POST /auth/login", handler.Login())
 	router.HandleFunc("POST /auth/register", handler.Register())
+	router.HandleFunc("POST /auth/verify", handler.Verify())
 }
 
 func (handler *AuthHandler) Login() http.HandlerFunc {
@@ -63,7 +64,30 @@ func (handler *AuthHandler) Register() http.HandlerFunc {
 		if err != nil {
 			return
 		}
-		email, err := handler.AuthService.Register(body.Email, body.Password, body.Name)
+		sessionId, err := handler.AuthService.Register(body.Email, body.Password, body.Name)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		// отправить ответ
+		data := RegisterResponse{
+			SessionId: sessionId,
+		}
+		res.Json(w, data, http.StatusCreated)
+	}
+}
+
+
+func (handler *AuthHandler) Verify() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body, err := req.HandleBody[VerifyRequest](w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		email, err := handler.AuthService.Verify(body.SessionId, body.Code)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -77,10 +101,9 @@ func (handler *AuthHandler) Register() http.HandlerFunc {
 			return
 		}
 
-		// отправить ответ
-		data := RegisterResponse{
+		data := VerifyResponse{
 			Token: token,
 		}
-		res.Json(w, data, http.StatusCreated)
+		res.Json(w, data, http.StatusAccepted)
 	}
 }

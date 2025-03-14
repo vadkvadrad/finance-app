@@ -5,7 +5,9 @@ import (
 	"finance-app/internal/auth"
 	"finance-app/internal/user"
 	"finance-app/pkg/db"
+	"finance-app/pkg/event"
 	"finance-app/pkg/middleware"
+	"finance-app/pkg/sender"
 	"net/http"
 )
 
@@ -16,13 +18,20 @@ func App() http.Handler {
 	}
 	db := db.NewDb(conf)
 	router := http.NewServeMux()
-	//eventBus := event.NewEventBus()
+	eventBus := event.NewEventBus()
+	sender, err := sender.Load(conf, eventBus)
+	if err != nil {
+		panic(err)
+	}
 
 	// Repository
 	userRepository := user.NewUserRepository(db)
 
 	// Services 
-	authService := auth.NewAuthService(userRepository)
+	authService := auth.NewAuthService(auth.AuthServiceDeps{
+		UserRepository: userRepository,
+		Event: eventBus,
+	})
 
 	// Handlers
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
@@ -30,9 +39,8 @@ func App() http.Handler {
 		AuthService: authService,
 	})
 
-
 	// listening for statistic
-	//go statService.AddClick()
+	go sender.Listen()
 
 	// Middlewares
 	stack := middleware.Chain(
