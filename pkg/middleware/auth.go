@@ -28,7 +28,7 @@ func IsAuthed(next http.Handler, config *configs.Config) http.Handler {
 			writeUnauthed(w)
 			return
 		}
-		ctx := context.WithValue(r.Context(), ContextEmailKey, data.Phone)
+		ctx := context.WithValue(r.Context(), ContextEmailKey, data.Email)
 		req := r.WithContext(ctx)
 		next.ServeHTTP(w, req)
 	})

@@ -7,6 +7,7 @@ import (
 const (
 	ErrNotAuthorized        = "user are not authorized"
 	ErrWrongUserCredentials = "wrong user credentials"
+	ErrUserExists           = "user already exists"
 )
 
 func Wrap(msg string, err error) error {
