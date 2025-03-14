@@ -32,7 +32,7 @@ func (repo *AccountRepository) Update(account *Account) (*Account, error) {
 	return account, nil
 }
 
-func (repo *AccountRepository) FindByUserId(id string) (*Account, error) {
+func (repo *AccountRepository) FindByUserId(id uint) (*Account, error) {
 	var account Account
 	result := repo.Db.First(&account,"user_id = ?", id)
 	if result.Error != nil {

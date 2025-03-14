@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"finance-app/internal/account"
 	"finance-app/internal/user"
 	"finance-app/pkg/er"
 	"finance-app/pkg/event"
@@ -11,41 +12,44 @@ import (
 )
 
 type AuthService struct {
-	UserRepository *user.UserRepository
-	Event          *event.EventBus
+	UserRepository    *user.UserRepository
+	AccountRepository *account.AccountRepository
+	Event             *event.EventBus
 }
 
 type AuthServiceDeps struct {
-	UserRepository *user.UserRepository
-	Event          *event.EventBus
+	UserRepository    *user.UserRepository
+	AccountRepository *account.AccountRepository
+	Event             *event.EventBus
 }
 
 func NewAuthService(deps AuthServiceDeps) *AuthService {
 	return &AuthService{
-		UserRepository: deps.UserRepository,
-		Event:          deps.Event,
+		UserRepository:    deps.UserRepository,
+		AccountRepository: deps.AccountRepository,
+		Event:             deps.Event,
 	}
 }
 
-func (service *AuthService) Login(email, password string) (string, error) {
+func (service *AuthService) Login(email, password string) (*user.User, error) {
 	// Находим пользователя и проверяем его наличие
 	existedUser, _ := service.UserRepository.FindByKey(user.EmailKey, email)
 	if existedUser == nil {
-		return "", errors.New(er.ErrWrongUserCredentials)
+		return nil, errors.New(er.ErrWrongUserCredentials)
 	}
 
 	// Проверка, верифицирован ли пользователь
 	if !existedUser.IsVerified {
-		return "", errors.New(er.ErrUserNotVerified)
+		return nil, errors.New(er.ErrUserNotVerified)
 	}
 
 	// Сравниваем пароли
 	err := bcrypt.CompareHashAndPassword([]byte(existedUser.Password), []byte(password))
 	if err != nil {
-		return "", errors.New(er.ErrWrongUserCredentials)
+		return nil, errors.New(er.ErrWrongUserCredentials)
 	}
 
-	return email, nil
+	return existedUser, nil
 }
 
 func (service *AuthService) Register(email, password, name string) (string, error) {
@@ -71,9 +75,19 @@ func (service *AuthService) Register(email, password, name string) (string, erro
 	}
 	user.Generate()
 
-	// Создаем запись в базе данных
+	// Создаем запись user
 	_, err = service.UserRepository.Create(user)
 	if err != nil {
+		return "", err
+	}
+
+	// Создаем запись account
+	_, err = service.AccountRepository.Create(&account.Account{
+		UserID: user.ID,
+		Balance: 0,
+		Currency: account.CurrencyRub,
+	})
+		if err != nil {
 		return "", err
 	}
 
@@ -90,24 +104,24 @@ func (service *AuthService) Register(email, password, name string) (string, erro
 	return user.SessionId, nil
 }
 
-func (service *AuthService) Verify(sessionId, code string) (string, error) {
+func (service *AuthService) Verify(sessionId, code string) (*user.User, error) {
 	// Находим пользователя
 	existedUser, _ := service.UserRepository.FindByKey(user.SessionIdKey, sessionId)
 	if existedUser == nil {
-		return "", errors.New(er.ErrUserExists)
+		return nil, errors.New(er.ErrUserExists)
 	}
 
 	// Проверка на подлинность кода
 	if existedUser.Code != code {
-		return "", errors.New(er.ErrNotAuthorized)
+		return nil, errors.New(er.ErrNotAuthorized)
 	}
 
 	// Пользователь становится верифицированным
 	existedUser.IsVerified = true
 	user, err := service.UserRepository.Update(existedUser)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return user.Email, nil
+	return user, nil
 }

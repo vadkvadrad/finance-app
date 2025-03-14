@@ -8,7 +8,7 @@ const (
 
 type Account struct {
 	gorm.Model
-	UserID   int     `json:"user_id"`
+	UserID   uint     `json:"user_id"`
 	Balance  float64 `json:"balance"`
 	Currency string  `json:"currency"`
 }

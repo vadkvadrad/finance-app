@@ -9,10 +9,16 @@ import (
 	"strings"
 )
 
+type UserData struct {
+	Id uint
+	Email string
+	Role string
+}
+
 type key string
 
 const (
-	ContextEmailKey key = "ContextEmailKey"
+	ContextUserDataKey key = "ContextUserDataKey"
 )
 
 func IsAuthed(next http.Handler, config *configs.Config) http.Handler {
@@ -28,7 +34,11 @@ func IsAuthed(next http.Handler, config *configs.Config) http.Handler {
 			writeUnauthed(w)
 			return
 		}
-		ctx := context.WithValue(r.Context(), ContextEmailKey, data.Email)
+		ctx := context.WithValue(r.Context(), ContextUserDataKey, UserData{
+			Id: data.Id,
+			Email: data.Email,
+			Role: data.Role,
+		})
 		req := r.WithContext(ctx)
 		next.ServeHTTP(w, req)
 	})
