@@ -27,15 +27,15 @@ func App() http.Handler {
 	// Repository
 	userRepository := user.NewUserRepository(db)
 
-	// Services 
+	// Services
 	authService := auth.NewAuthService(auth.AuthServiceDeps{
 		UserRepository: userRepository,
-		Event: eventBus,
+		Event:          eventBus,
 	})
 
 	// Handlers
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
-		Config: conf,
+		Config:      conf,
 		AuthService: authService,
 	})
 

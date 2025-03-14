@@ -12,24 +12,24 @@ import (
 
 type AuthService struct {
 	UserRepository *user.UserRepository
-	Event *event.EventBus
+	Event          *event.EventBus
 }
 
 type AuthServiceDeps struct {
 	UserRepository *user.UserRepository
-	Event *event.EventBus
+	Event          *event.EventBus
 }
 
 func NewAuthService(deps AuthServiceDeps) *AuthService {
 	return &AuthService{
 		UserRepository: deps.UserRepository,
-		Event: deps.Event,
+		Event:          deps.Event,
 	}
 }
 
 func (service *AuthService) Login(email, password string) (string, error) {
 	// Находим пользователя и проверяем его наличие
-	existedUser, _ := service.UserRepository.FindByKey(user.EmailKey,  email)
+	existedUser, _ := service.UserRepository.FindByKey(user.EmailKey, email)
 	if existedUser == nil {
 		return "", errors.New(er.ErrWrongUserCredentials)
 	}
@@ -50,7 +50,7 @@ func (service *AuthService) Login(email, password string) (string, error) {
 
 func (service *AuthService) Register(email, password, name string) (string, error) {
 	// Находим пользователя и проверяем его наличие
-	existedUser, _ := service.UserRepository.FindByKey(user.EmailKey,  email)
+	existedUser, _ := service.UserRepository.FindByKey(user.EmailKey, email)
 	if existedUser != nil {
 		return "", errors.New(er.ErrUserExists)
 	}
@@ -63,10 +63,10 @@ func (service *AuthService) Register(email, password, name string) (string, erro
 
 	// Создаем модель юзера
 	user := &user.User{
-		Email: email,
-		Password: string(hashedPassword),
-		Name: name,
-		Role: user.RoleUser,
+		Email:      email,
+		Password:   string(hashedPassword),
+		Name:       name,
+		Role:       user.RoleUser,
 		IsVerified: false,
 	}
 	user.Generate()
@@ -81,20 +81,18 @@ func (service *AuthService) Register(email, password, name string) (string, erro
 	go service.Event.Publish(event.Event{
 		Type: event.EventSendEmail,
 		Data: sender.Addressee{
-			To: email,
+			To:      email,
 			Subject: "Подтвердите почту",
-			Text: "Ваш персональный код подтверждения личности: " + user.Code + ". Не сообщайте никому данный код.",
+			Text:    "Ваш персональный код подтверждения личности: " + user.Code + ". Не сообщайте никому данный код.",
 		},
 	})
 
 	return user.SessionId, nil
 }
 
-
-
 func (service *AuthService) Verify(sessionId, code string) (string, error) {
 	// Находим пользователя
-	existedUser, _ := service.UserRepository.FindByKey(user.SessionIdKey,  sessionId)
+	existedUser, _ := service.UserRepository.FindByKey(user.SessionIdKey, sessionId)
 	if existedUser == nil {
 		return "", errors.New(er.ErrUserExists)
 	}

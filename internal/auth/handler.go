@@ -78,7 +78,6 @@ func (handler *AuthHandler) Register() http.HandlerFunc {
 	}
 }
 
-
 func (handler *AuthHandler) Verify() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := req.HandleBody[VerifyRequest](w, r)
