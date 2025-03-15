@@ -9,24 +9,23 @@ import (
 )
 
 type AccountHandler struct {
-	Config *configs.Config
+	Config         *configs.Config
 	AccountService *AccountService
 }
 
 type AccountHandlerDeps struct {
-	Config *configs.Config
+	Config         *configs.Config
 	AccountService *AccountService
 }
 
 func NewAccountHandler(router *http.ServeMux, deps AccountHandlerDeps) {
 	handler := &AccountHandler{
-		Config: deps.Config,
+		Config:         deps.Config,
 		AccountService: deps.AccountService,
 	}
 
 	router.Handle("GET /account", middleware.IsAuthed(handler.Get(), deps.Config))
 }
-
 
 func (handler *AccountHandler) Get() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -41,7 +40,7 @@ func (handler *AccountHandler) Get() http.HandlerFunc {
 		acc, err := handler.AccountService.GetByUserId(userData.Id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
-			return 
+			return
 		}
 
 		res.Json(w, acc, http.StatusOK)

@@ -42,7 +42,7 @@ func (repo *IncomeRepository) Delete(id uint) error {
 
 func (repo *IncomeRepository) FindByUserId(id uint) (*Income, error) {
 	var income Income
-	result := repo.Db.First(&income,"user_id = ?", id)
+	result := repo.Db.First(&income, "user_id = ?", id)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -51,7 +51,7 @@ func (repo *IncomeRepository) FindByUserId(id uint) (*Income, error) {
 
 func (repo *IncomeRepository) FindById(id uint) (*Income, error) {
 	var income Income
-	result := repo.Db.First(&income,"id = ?", id)
+	result := repo.Db.First(&income, "id = ?", id)
 	if result.Error != nil {
 		return nil, result.Error
 	}

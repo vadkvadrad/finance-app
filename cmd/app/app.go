@@ -38,7 +38,7 @@ func App() http.Handler {
 		Event:             eventBus,
 	})
 	incomeService := income.NewIncomeService(income.IncomeServiceDeps{
-		IncomeRepository: incomeRepository,
+		IncomeRepository:  incomeRepository,
 		AccountRepository: accountRepository,
 	})
 	accountService := account.NewAccountService(account.AccountServiceDeps{
@@ -51,11 +51,11 @@ func App() http.Handler {
 		AuthService: authService,
 	})
 	account.NewAccountHandler(router, account.AccountHandlerDeps{
-		Config:            conf,
+		Config:         conf,
 		AccountService: accountService,
 	})
 	income.NewIncomeHandler(router, income.IncomeHandlerDeps{
-		Config: conf,
+		Config:        conf,
 		IncomeService: incomeService,
 	})
 

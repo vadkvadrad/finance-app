@@ -14,7 +14,6 @@ func NewAccountService(deps AccountServiceDeps) *AccountService {
 	}
 }
 
-
 func (service *AccountService) GetByUserId(id uint) (*Account, error) {
 	return service.AccountRepository.FindByUserId(id)
 }
