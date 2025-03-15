@@ -52,7 +52,45 @@ func (service *IncomeService) NewIncome(income *Income) (*Income, error) {
 }
 
 func (service *IncomeService) RedactIncome(income *Income) (*Income, error) {
-	return service.IncomeRepository.Update(income)
+	// Проверка на положительность баланса
+	if income.Amount <= 0 {
+		return nil, errors.New(er.ErrNegativeIncome)
+	}
+
+	// Получение старого дохода
+	oldIncome, err := service.IncomeRepository.FindById(income.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Проверка на подлинность пользователя
+	if oldIncome.UserId != income.UserId {
+		return nil, errors.New(er.ErrWrongUserCredentials)
+	}
+
+	// Получение аккаунта с данным доходом
+	account, err := service.AccountRepository.FindByUserId(oldIncome.UserId)
+	if err != nil {
+		return nil, err
+	}
+
+	// Обновление баланса аккаунта
+	account.Balance -= oldIncome.Amount
+	account.Balance += income.Amount
+
+	// Обновление аккаунта
+	_, err = service.AccountRepository.Update(account)
+	if err != nil {
+		return nil, err
+	}
+
+	// Обновление дохода
+	income, err = service.IncomeRepository.Update(income)
+	if err != nil {
+		return nil, err
+	}
+
+	return income, nil
 }
 
 func (service *IncomeService) DeleteIncome(id uint, userId uint) error {

@@ -65,6 +65,12 @@ func (service *AuthService) Register(email, password, name string) (string, erro
 		// Отправить сообщение с кодом
 		service.sendEmail(email, existedUser.Code)
 
+		// Перезаписать юзера в бд
+		_, err := service.UserRepository.Update(existedUser)
+		if err != nil {
+			return "", err
+		}
+
 		return existedUser.SessionId, nil
 	}
 
