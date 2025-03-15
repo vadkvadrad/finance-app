@@ -2,6 +2,7 @@ package main
 
 import (
 	"finance-app/internal/account"
+	"finance-app/internal/income"
 	"finance-app/internal/user"
 	"os"
 
@@ -20,5 +21,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	db.AutoMigrate(&user.User{}, &account.Account{})
+	db.AutoMigrate(&user.User{}, &account.Account{}, &income.Income{})
 }

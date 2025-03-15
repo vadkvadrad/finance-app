@@ -4,6 +4,7 @@ import (
 	"finance-app/configs"
 	"finance-app/internal/account"
 	"finance-app/internal/auth"
+	"finance-app/internal/income"
 	"finance-app/internal/user"
 	"finance-app/pkg/db"
 	"finance-app/pkg/event"
@@ -28,12 +29,17 @@ func App() http.Handler {
 	// Repository
 	userRepository := user.NewUserRepository(db)
 	accountRepository := account.NewAccountRepository(db)
+	incomeRepository := income.NewIncomeRepository(db)
 
 	// Services
 	authService := auth.NewAuthService(auth.AuthServiceDeps{
 		UserRepository:    userRepository,
 		AccountRepository: accountRepository,
 		Event:             eventBus,
+	})
+	incomeService := income.NewIncomeService(income.IncomeServiceDeps{
+		IncomeRepository: incomeRepository,
+		AccountRepository: accountRepository,
 	})
 
 	// Handlers
@@ -44,6 +50,10 @@ func App() http.Handler {
 	account.NewAccountHandler(router, account.AccountHandlerDeps{
 		Config:            conf,
 		AccountRepository: accountRepository,
+	})
+	income.NewIncomeHandler(router, income.IncomeHandlerDeps{
+		Config: conf,
+		IncomeService: incomeService,
 	})
 
 	// listening for statistic
