@@ -12,18 +12,16 @@ type IncomeService struct {
 }
 
 type IncomeServiceDeps struct {
-	IncomeRepository *IncomeRepository
+	IncomeRepository  *IncomeRepository
 	AccountRepository *account.AccountRepository
 }
 
-
 func NewIncomeService(deps IncomeServiceDeps) *IncomeService {
 	return &IncomeService{
-		IncomeRepository: deps.IncomeRepository,
+		IncomeRepository:  deps.IncomeRepository,
 		AccountRepository: deps.AccountRepository,
 	}
 }
-
 
 func (service *IncomeService) NewIncome(income *Income) (*Income, error) {
 	// Проверка на положительность дохода
@@ -57,4 +55,38 @@ func (service *IncomeService) RedactIncome(income *Income) (*Income, error) {
 	return service.IncomeRepository.Update(income)
 }
 
+func (service *IncomeService) DeleteIncome(id uint, userId uint) error {
+	// Получение дохода
+	income, err := service.IncomeRepository.FindById(id)
+	if err != nil {
+		return err
+	}
 
+	// Получение аккаунта
+	account, err := service.AccountRepository.FindByUserId(userId)
+	if err != nil {
+		return err
+	}
+
+	// Проверка правильный ли получен аккаунт
+	if income.UserId != account.UserID {
+		return errors.New(er.ErrWrongUserCredentials)
+	}
+
+	// Изменение баланса
+	account.Balance -= income.Amount
+
+	// Обновление аккаунта
+	_, err = service.AccountRepository.Update(account)
+	if err != nil {
+		return err
+	}
+
+	// Удаление дохода
+	err = service.IncomeRepository.Delete(id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

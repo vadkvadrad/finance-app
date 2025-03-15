@@ -41,6 +41,9 @@ func App() http.Handler {
 		IncomeRepository: incomeRepository,
 		AccountRepository: accountRepository,
 	})
+	accountService := account.NewAccountService(account.AccountServiceDeps{
+		AccountRepository: accountRepository,
+	})
 
 	// Handlers
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{
@@ -49,7 +52,7 @@ func App() http.Handler {
 	})
 	account.NewAccountHandler(router, account.AccountHandlerDeps{
 		Config:            conf,
-		AccountRepository: accountRepository,
+		AccountService: accountService,
 	})
 	income.NewIncomeHandler(router, income.IncomeHandlerDeps{
 		Config: conf,

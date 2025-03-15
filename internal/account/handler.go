@@ -10,18 +10,18 @@ import (
 
 type AccountHandler struct {
 	Config *configs.Config
-	AccountRepository *AccountRepository
+	AccountService *AccountService
 }
 
 type AccountHandlerDeps struct {
 	Config *configs.Config
-	AccountRepository *AccountRepository
+	AccountService *AccountService
 }
 
 func NewAccountHandler(router *http.ServeMux, deps AccountHandlerDeps) {
 	handler := &AccountHandler{
 		Config: deps.Config,
-		AccountRepository: deps.AccountRepository,
+		AccountService: deps.AccountService,
 	}
 
 	router.Handle("GET /account", middleware.IsAuthed(handler.Get(), deps.Config))
@@ -38,7 +38,7 @@ func (handler *AccountHandler) Get() http.HandlerFunc {
 		}
 
 		// Получение данных аккаунта
-		acc, err := handler.AccountRepository.FindByUserId(userData.Id)
+		acc, err := handler.AccountService.GetByUserId(userData.Id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return 

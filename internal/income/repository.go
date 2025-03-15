@@ -32,9 +32,26 @@ func (repo *IncomeRepository) Update(income *Income) (*Income, error) {
 	return income, nil
 }
 
+func (repo *IncomeRepository) Delete(id uint) error {
+	result := repo.Db.Delete(&Income{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
 func (repo *IncomeRepository) FindByUserId(id uint) (*Income, error) {
 	var income Income
 	result := repo.Db.First(&income,"user_id = ?", id)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &income, nil
+}
+
+func (repo *IncomeRepository) FindById(id uint) (*Income, error) {
+	var income Income
+	result := repo.Db.First(&income,"id = ?", id)
 	if result.Error != nil {
 		return nil, result.Error
 	}
